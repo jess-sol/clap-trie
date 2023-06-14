@@ -1,0 +1,16 @@
+[package]
+name = "clap-trie"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+convert_case = "0.6.0"
+syn = "2.0.18"
+proc-macro2 = "1.0.60"
+quote = "1.0.28"
+
+[dev-dependencies]
+clap = { version = "4", features = ["string", "derive", "debug"] }
