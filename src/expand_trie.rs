@@ -28,10 +28,10 @@ impl Parse for ClapTrieData {
 }
 
 struct TrieItem {
-    struct_name: Ident,
     struct_path: Path,
     enum_path: Path,
     enum_name: Ident,
+    enum_variant_name: Ident,
 }
 
 pub(crate) fn expand_trie(input: TokenStream) -> Result<TokenStream> {
@@ -53,18 +53,15 @@ pub(crate) fn expand_trie(input: TokenStream) -> Result<TokenStream> {
 
         enum_variants.push(quote!(#enum_name(#enum_path)));
 
-        // Replace last ident in enum_path with the module name generated in expand_subcommand macro
-        let mod_path = change_path_ident!(enum_path, ident!(&declarations.mod_name));
-
         // Create trie
-        for (key, struct_name) in &declarations.keys {
+        for (key, (enum_variant_name, struct_name)) in &declarations.keys {
             let struct_name = ident!(struct_name);
-            let struct_path = append_path!(mod_path, struct_name.clone());
+            let struct_path = change_path_ident!(enum_path, struct_name.clone());
             let res = trie.insert(key, TrieItem {
-                struct_name,
                 struct_path,
                 enum_path: enum_path.clone(),
                 enum_name: enum_name.clone(),
+                enum_variant_name: ident!(enum_variant_name),
             });
             if res.is_some() {
                 println!("Duplicate variant: {}", key);
@@ -84,7 +81,7 @@ pub(crate) fn expand_trie(input: TokenStream) -> Result<TokenStream> {
     let name = data.name;
     Ok(quote!{
         #(#attrs)*
-        enum #name {
+        pub enum #name {
             #(#enum_variants),*
         }
 
@@ -125,7 +122,7 @@ pub(crate) fn expand_trie(input: TokenStream) -> Result<TokenStream> {
 
 fn from_arg_aggregate(value: Option<&mut TrieItem>, key: String, memo: Vec<TokenStream>) -> TokenStream {
     let return_no_subcommand = if let Some(value) = value {
-        let TrieItem { struct_path, enum_path, enum_name, struct_name: enum_variant_name } = value;
+        let TrieItem { struct_path, enum_path, enum_name, enum_variant_name, .. } = value;
         quote! {
             return Ok(Self::#enum_name(#enum_path::#enum_variant_name(<#struct_path as clap::FromArgMatches>::from_arg_matches(matches)?)));
         }
@@ -162,6 +159,7 @@ fn subcommand_aggregate(value: Option<&mut TrieItem>, key: String, memo: Vec<Tok
     if ! memo.is_empty() {
         command.extend(quote!{
             .args_conflicts_with_subcommands(true) // Don't allow args on intermediate commands
+            .arg_required_else_help(true)
             .subcommands([
                 #(#memo),*
             ])

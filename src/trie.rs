@@ -185,8 +185,6 @@ mod tests {
         trie.insert("get device bundles", "get device bundles");
         trie.insert("get device", "get device");
 
-        println!("HIDER: {:?}", trie);
-
         assert_eq!(trie.child_keys("").map(Iterator::collect), Some(HashSet::from(["auth", "get"])));
         assert_eq!(trie.lookup("auth"), Some(&"auth"));
         assert_eq!(trie.lookup("get device bundles"), Some(&"get device bundles"));

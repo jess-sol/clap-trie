@@ -41,10 +41,10 @@ struct Cli {
 #[test]
 fn basic() {
     let x = Cli::try_parse_from(vec!["test", "get", "thingy", "attributes", "ASDF"]);
-    matches!(x.unwrap().subcommand, Subcommands::Thingies(sub::Thingies::GetThingyAttributes(sub::thingies::GetThingyAttributes { id: _ })));
+    matches!(x.unwrap().subcommand, Subcommands::Thingies(sub::Thingies::GetThingyAttributes(sub::GetThingyAttributesCmd { id: _ })));
 
     let x = Cli::try_parse_from(vec!["test", "get", "thingy", "ASDF"]);
-    matches!(x.unwrap().subcommand, Subcommands::Thingies(sub::Thingies::GetThingy(sub::thingies::GetThingy { id: _ })));
+    matches!(x.unwrap().subcommand, Subcommands::Thingies(sub::Thingies::GetThingy(sub::GetThingyCmd { id: _ })));
 
     let x = Cli::try_parse_from(vec!["test"]);
     assert_eq!(x.unwrap_err().kind(), ErrorKind::DisplayHelpOnMissingArgumentOrSubcommand);

@@ -52,12 +52,14 @@ pub(crate) fn expand_subcommand(input: TokenStream) -> Result<TokenStream> {
     let mut cmd_names = HashMap::new();
 
     for subcommand in data.subcommands {
-        let enum_variant_name = subcommand.name.value().with_boundaries(&[Boundary::Space]).to_case(Case::Pascal);
-        cmd_names.insert(subcommand.name.value(), enum_variant_name.clone());
-        let name = ident!(&enum_variant_name);
+        let mut struct_name = subcommand.name.value().with_boundaries(Boundary::all().as_slice()).to_case(Case::Pascal);
+        let enum_variant_name = ident!(&struct_name);
+        struct_name.push_str("Cmd");
+        cmd_names.insert(subcommand.name.value(), (enum_variant_name.to_string(), struct_name.clone()));
+        let struct_name = ident!(&struct_name);
 
         cmd_enums.push(quote!{
-            #name(#name)
+            #enum_variant_name(#struct_name)
         });
 
         let atts = subcommand.attrs;
@@ -65,20 +67,18 @@ pub(crate) fn expand_subcommand(input: TokenStream) -> Result<TokenStream> {
         cmd_structs.push(quote! {
             #[derive(clap::Parser)]
             #(#atts)*
-            pub(crate) struct #name #fields
+            pub struct #struct_name #fields
         });
     }
 
 
     let enum_name = data.name;
-    let mod_name = &enum_name.to_string().from_case(Case::Title).to_case(Case::Snake);
 
     // Add data to ALL_DECLARATIONS static, so it can be used in clap-trie proc macro, which needs
     // more information than is provided to expand.
     let res = crate::ALL_DECLARATIONS.get_or_init(|| RwLock::new(HashMap::new()))
         .write().expect("Unable to wrap shared declarations in clap-trie proc macro")
         .insert(enum_name.to_string(), crate::SubcommandEnumDefinition {
-            mod_name: mod_name.clone(),
             keys: cmd_names
         });
     if res.is_some() {
@@ -88,17 +88,13 @@ pub(crate) fn expand_subcommand(input: TokenStream) -> Result<TokenStream> {
     }
 
     // Get list of trie keys to commands
-    let mod_name = ident!(mod_name);
     let attrs = data.attrs;
     Ok(quote! {
-        pub(crate) use #mod_name::#enum_name;
-        pub(crate) mod #mod_name {
-            #(#attrs)*
-            pub(crate) enum #enum_name {
-                #(#cmd_enums,)*
-            }
-
-            #(#cmd_structs)*
+        #(#attrs)*
+        pub enum #enum_name {
+            #(#cmd_enums,)*
         }
+
+        #(#cmd_structs)*
     })
 }

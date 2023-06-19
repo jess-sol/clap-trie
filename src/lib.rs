@@ -22,8 +22,7 @@ pub(crate) use trie_key::TrieKey;
 
 #[derive(Clone, Debug, Default)]
 struct SubcommandEnumDefinition {
-    mod_name: String, // Name of the module container command structs
-    keys: HashMap<String, String>, // trie path -> command struct name
+    keys: HashMap<String, (String, String)>, // trie path -> (enum variant name, command struct name)
 }
 
 static ALL_DECLARATIONS: OnceLock<RwLock<HashMap<String, SubcommandEnumDefinition>>> = OnceLock::new();

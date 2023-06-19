@@ -43,16 +43,16 @@ struct Cli {
 #[test]
 fn basic() {
     let x = Cli::try_parse_from(vec!["test", "get", "thingy", "attributes", "ASDF"]);
-    matches!(x.unwrap().subcommand, Subcommands::Thingies(sub::Thingies::GetThingyAttributes(sub::thingies::GetThingyAttributes { id: _ })));
+    matches!(x.unwrap().subcommand, Subcommands::Thingies(sub::Thingies::GetThingyAttributes(sub::GetThingyAttributesCmd { id: _ })));
 
     let x = Cli::try_parse_from(vec!["test", "get", "other", "attributes", "ASDF"]);
-    matches!(x.unwrap().subcommand, Subcommands::Other(sub2::Other::GetOtherAttributes(sub2::other::GetOtherAttributes { id: _ })));
+    matches!(x.unwrap().subcommand, Subcommands::Other(sub2::Other::GetOtherAttributes(sub2::GetOtherAttributesCmd { id: _ })));
 
     let x = Cli::try_parse_from(vec!["test", "get", "thingy", "ASDF"]);
-    matches!(x.unwrap().subcommand, Subcommands::Thingies(sub::Thingies::GetThingy(sub::thingies::GetThingy { id: _ })));
+    matches!(x.unwrap().subcommand, Subcommands::Thingies(sub::Thingies::GetThingy(sub::GetThingyCmd { id: _ })));
 
     let x = Cli::try_parse_from(vec!["test", "get", "other", "ASDF"]);
-    matches!(x.unwrap().subcommand, Subcommands::Other(sub2::Other::GetOther(sub2::other::GetOther { id: _ })));
+    matches!(x.unwrap().subcommand, Subcommands::Other(sub2::Other::GetOther(sub2::GetOtherCmd { id: _ })));
 
     let x = Cli::try_parse_from(vec!["test"]);
     assert_eq!(x.unwrap_err().kind(), ErrorKind::DisplayHelpOnMissingArgumentOrSubcommand);
